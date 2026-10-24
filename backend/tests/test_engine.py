@@ -229,7 +229,7 @@ def test_audit_redacts_secrets(setup, svc: Services) -> None:
         actor="user",
         source="user",
         action="x",
-        params={"note": "token=abcd1234efgh5678ijkl"},
+        params={"note": "token=abcd1234efgh5678ijkl"},  # gitleaks:allow
         decision="deny",
         detail="Bearer abcdefghijklmnopqrstuvwxyz123456",
     )

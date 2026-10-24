@@ -47,11 +47,12 @@ PROTECTED_NAMES = {
     "kernel_task",
 }
 
+# Compared against "/"-normalized paths, so Windows paths match on every OS
 SUSPICIOUS_DIR_MARKERS = (
-    os.sep + "temp" + os.sep,
-    os.sep + "tmp" + os.sep,
-    os.sep + "downloads" + os.sep,
-    os.sep + "appdata" + os.sep + "local" + os.sep + "temp" + os.sep,
+    "/temp/",
+    "/tmp/",  # noqa: S108 - a path marker, not a temp file
+    "/downloads/",
+    "/appdata/local/temp/",
 )
 
 
@@ -145,7 +146,7 @@ def list_listening_ports() -> list[dict[str, Any]]:
 
 
 def is_suspicious_location(exe: str) -> bool:
-    lowered = os.path.normcase(exe).lower()
+    lowered = exe.replace("\\", "/").lower()
     return any(marker in lowered for marker in SUSPICIOUS_DIR_MARKERS)
 
 
