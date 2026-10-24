@@ -188,7 +188,10 @@ def test_factory_order(tmp_path) -> None:
     gem = Settings(_env_file=None, data_dir=tmp_path / "d", GEMINI_API_KEY=KEY)  # type: ignore[call-arg]
     assert factory.create_provider(gem).name == "gemini"
     both = Settings(  # type: ignore[call-arg]
-        _env_file=None, data_dir=tmp_path / "d", GEMINI_API_KEY=KEY, ANTHROPIC_API_KEY="sk-test"
+        _env_file=None,
+        data_dir=tmp_path / "d",
+        GEMINI_API_KEY=KEY,
+        ANTHROPIC_API_KEY="sk-test",  # gitleaks:allow
     )
     assert factory.create_provider(both).name == "anthropic"
 
