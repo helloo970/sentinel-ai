@@ -1,0 +1,10 @@
+{
+  "nodes": [
+    { "label": "Alex", "category": "ich", "summary": "That's me." },
+    { "label": "Sam", "category": "ich", "summary": "My brother.", "links": ["Alex"] },
+    { "label": "Chess", "category": "interessen", "summary": "I like playing it." },
+    { "label": "YouTube", "category": "quellen", "summary": "Videos and tutorials." },
+    { "label": "Style: short", "category": "stil", "summary": "Answer short and clear." }
+  ],
+  "reminders": [{ "text": "Exam tomorrow", "due": "2030-01-14T18:00" }]
+}

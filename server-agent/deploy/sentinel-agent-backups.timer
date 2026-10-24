@@ -1,0 +1,10 @@
+[Unit]
+Description=SENTINEL AI: refresh the backup overview hourly
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1h
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

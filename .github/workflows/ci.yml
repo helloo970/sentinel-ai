@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: backend (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest
+
+  server-agent:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest
+
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+
+  tauri:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: app/src-tauri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+      - run: cargo fmt --check
+      - name: Prepare frontend dist for tauri::generate_context
+        run: New-Item -ItemType Directory -Force ../dist | Out-Null
+        shell: pwsh
+      - run: cargo clippy -- -D warnings
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

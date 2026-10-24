@@ -1,0 +1,46 @@
+[Unit]
+Description=SENTINEL AI server agent (read-only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sentinel-agent
+Group=sentinel-agent
+# adm: read access to /var/log/auth.log
+SupplementaryGroups=adm
+Environment=PYTHONPATH=/opt/sentinel-agent/src
+ExecStart=/usr/bin/python3 -m sentinel_agent --config /etc/sentinel-agent/config.json
+Restart=on-failure
+RestartSec=5
+# Only writable location: encrypted backups from the PC
+StateDirectory=sentinel-agent
+StateDirectoryMode=0700
+
+# Hardening: no capabilities, no write access, no new privileges
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_INET AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged
+MemoryMax=128M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

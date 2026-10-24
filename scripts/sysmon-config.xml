@@ -1,0 +1,127 @@
+<!--
+  SENTINEL AI – compact Sysmon configuration for a private Windows PC.
+  Goal: little noise, focus on the events that SENTINEL rules evaluate.
+-->
+<Sysmon schemaversion="4.90">
+  <HashAlgorithms>SHA256</HashAlgorithms>
+  <CheckRevocation>False</CheckRevocation>
+  <EventFiltering>
+
+    <!-- 1: Process creation - everything except very frequent noise -->
+    <RuleGroup name="ProcessCreate" groupRelation="or">
+      <ProcessCreate onmatch="exclude">
+        <Image condition="is">C:\Windows\System32\conhost.exe</Image>
+        <Image condition="is">C:\Windows\System32\backgroundTaskHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\RuntimeBroker.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchProtocolHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\SearchFilterHost.exe</Image>
+        <Image condition="is">C:\Windows\System32\wbem\WmiPrvSE.exe</Image>
+      </ProcessCreate>
+    </RuleGroup>
+
+    <!-- 3: Network connections from commonly abused programs -->
+    <RuleGroup name="NetworkConnect" groupRelation="or">
+      <NetworkConnect onmatch="include">
+        <Image condition="end with">\powershell.exe</Image>
+        <Image condition="end with">\pwsh.exe</Image>
+        <Image condition="end with">\cmd.exe</Image>
+        <Image condition="end with">\mshta.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+        <Image condition="end with">\regsvr32.exe</Image>
+        <Image condition="end with">\certutil.exe</Image>
+        <Image condition="end with">\bitsadmin.exe</Image>
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+        <Image condition="contains">\AppData\Local\Temp\</Image>
+        <Image condition="contains">\Downloads\</Image>
+      </NetworkConnect>
+    </RuleGroup>
+
+    <!-- 8: Remote threads into other processes -->
+    <RuleGroup name="CreateRemoteThread" groupRelation="or">
+      <CreateRemoteThread onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\System32\svchost.exe</SourceImage>
+      </CreateRemoteThread>
+    </RuleGroup>
+
+    <!-- 10: Access to lsass.exe (credential dumping) -->
+    <RuleGroup name="ProcessAccess" groupRelation="or">
+      <ProcessAccess onmatch="include">
+        <TargetImage condition="is">C:\Windows\System32\lsass.exe</TargetImage>
+      </ProcessAccess>
+    </RuleGroup>
+
+    <!-- 11: New executable files in user folders -->
+    <RuleGroup name="FileCreate" groupRelation="or">
+      <FileCreate onmatch="include">
+        <TargetFilename condition="end with">.exe</TargetFilename>
+        <TargetFilename condition="end with">.dll</TargetFilename>
+        <TargetFilename condition="end with">.ps1</TargetFilename>
+        <TargetFilename condition="end with">.bat</TargetFilename>
+        <TargetFilename condition="end with">.vbs</TargetFilename>
+        <TargetFilename condition="end with">.hta</TargetFilename>
+        <TargetFilename condition="end with">.scr</TargetFilename>
+        <TargetFilename condition="contains">\Start Menu\Programs\Startup\</TargetFilename>
+      </FileCreate>
+    </RuleGroup>
+
+    <!-- 12/13: Autostart in the registry -->
+    <RuleGroup name="RegistryEvent" groupRelation="or">
+      <RegistryEvent onmatch="include">
+        <TargetObject condition="contains">\CurrentVersion\Run</TargetObject>
+        <TargetObject condition="contains">\CurrentVersion\RunOnce</TargetObject>
+        <TargetObject condition="contains">\Services\</TargetObject>
+        <TargetObject condition="contains">\Winlogon\</TargetObject>
+      </RegistryEvent>
+    </RuleGroup>
+
+    <!-- 22: DNS queries only from script hosts -->
+    <RuleGroup name="DnsQuery" groupRelation="or">
+      <DnsQuery onmatch="include">
+        <Image condition="end with">\powershell.exe</Image>
+        <Image condition="end with">\mshta.exe</Image>
+        <Image condition="end with">\wscript.exe</Image>
+        <Image condition="end with">\cscript.exe</Image>
+        <Image condition="end with">\rundll32.exe</Image>
+      </DnsQuery>
+    </RuleGroup>
+
+    <!-- Other event types off (empty include = log nothing) -->
+    <RuleGroup name="ImageLoadOff" groupRelation="or">
+      <ImageLoad onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="FileCreateTimeOff" groupRelation="or">
+      <FileCreateTime onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="RawAccessReadOff" groupRelation="or">
+      <RawAccessRead onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="PipeEventOff" groupRelation="or">
+      <PipeEvent onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="WmiEventOff" groupRelation="or">
+      <WmiEvent onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="FileDeleteOff" groupRelation="or">
+      <FileDelete onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="ClipboardChangeOff" groupRelation="or">
+      <ClipboardChange onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="ProcessTamperingOff" groupRelation="or">
+      <ProcessTampering onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="FileDeleteDetectedOff" groupRelation="or">
+      <FileDeleteDetected onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="FileBlockExecutableOff" groupRelation="or">
+      <FileBlockExecutable onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="FileBlockShreddingOff" groupRelation="or">
+      <FileBlockShredding onmatch="include" />
+    </RuleGroup>
+    <RuleGroup name="FileExecutableDetectedOff" groupRelation="or">
+      <FileExecutableDetected onmatch="include" />
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>

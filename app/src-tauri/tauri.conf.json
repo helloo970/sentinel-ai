@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SENTINEL AI",
+  "version": "0.1.0",
+  "identifier": "ai.sentinel.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "SENTINEL AI",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1100,
+        "minHeight": 700,
+        "center": true,
+        "backgroundColor": "#04070b",
+        "visible": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://tv-trthaber.medya.trt.com.tr https://tagesschau.akamaized.net; media-src 'self' blob: https://tv-trthaber.medya.trt.com.tr https://tagesschau.akamaized.net; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+      "freezePrototype": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
+    "shortDescription": "Jarvis-style assistant with defensive security monitoring",
+    "category": "Utility"
+  }
+}

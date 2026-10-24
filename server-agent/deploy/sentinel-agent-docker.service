@@ -1,0 +1,9 @@
+[Unit]
+Description=SENTINEL AI: write the Docker container list for the agent
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/sentinel-agent/docker-snapshot.sh
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes

@@ -1,0 +1,10 @@
+{
+  "name": "SENTINEL",
+  "short_name": "SENTINEL",
+  "start_url": "/m",
+  "scope": "/m",
+  "display": "standalone",
+  "background_color": "#05090d",
+  "theme_color": "#05090d",
+  "icons": [{ "src": "/m/icon.png", "sizes": "180x180", "type": "image/png" }]
+}

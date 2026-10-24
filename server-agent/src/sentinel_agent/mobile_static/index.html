@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#05090d" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SENTINEL" />
+    <link rel="apple-touch-icon" href="/m/icon.png" />
+    <link rel="manifest" href="/m/manifest.webmanifest" />
+    <title>SENTINEL</title>
+    <link rel="stylesheet" href="/m/app.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">SENTINEL</div>
+      <button id="sound" class="ghost small" type="button">🔕 Tap for alarm sound</button>
+      <div id="pc" class="chip">…</div>
+    </header>
+
+    <section id="login" hidden>
+      <h1>Sign in</h1>
+      <p class="dim">Phone view PIN</p>
+      <form id="login-form">
+        <input id="pin" type="password" inputmode="numeric" autocomplete="current-password"
+          minlength="6" maxlength="64" required placeholder="PIN" />
+        <button type="submit" class="primary">Sign in</button>
+      </form>
+      <p id="login-error" class="crit" hidden></p>
+    </section>
+
+    <main id="app" hidden>
+      <section class="panel">
+        <div class="row">
+          <div>
+            <div class="label">Protection</div>
+            <div id="state" class="value">…</div>
+          </div>
+          <div class="right">
+            <div class="label">Autonomy</div>
+            <select id="autonomy" disabled>
+              <option value="0">Observer</option>
+              <option value="1">Assistant</option>
+              <option value="2">Autopilot</option>
+              <option value="3">Guardian</option>
+            </select>
+          </div>
+        </div>
+        <div id="mode" class="dim"></div>
+      </section>
+
+      <div id="toast" class="panel toast" hidden></div>
+
+      <section id="pairing" class="panel" hidden>
+        <div class="label">Pair phone</div>
+        <p class="dim">
+          For full control, create a pairing code on the PC under Settings → Phone
+          and enter it here (or scan the QR code with the camera).
+        </p>
+        <form id="pair-form">
+          <input id="pair-code" autocomplete="off" autocapitalize="characters"
+            placeholder="Pairing code" />
+          <button type="submit">Pair</button>
+        </form>
+      </section>
+
+      <section id="control" hidden>
+        <section class="panel">
+          <div class="label">Approvals</div>
+          <ul id="approvals"></ul>
+        </section>
+        <section class="panel">
+          <div class="label">Modes &amp; routines</div>
+          <div id="modes" class="buttons"></div>
+          <div id="routines" class="buttons"></div>
+        </section>
+        <section class="panel">
+          <div class="label">Jarvis</div>
+          <form id="chat-form" class="inline">
+            <input id="chat-text" maxlength="500" placeholder="e.g. Add milk to the list" />
+            <button type="submit">Send</button>
+          </form>
+          <ul id="results"></ul>
+        </section>
+        <section class="panel">
+          <div class="label">Undo</div>
+          <ul id="undo"></ul>
+        </section>
+        <section class="panel">
+          <div class="label">Alarm test</div>
+          <p class="dim small left">
+            Only simulates an attack: alert, sound and push as in a real emergency, but without any defense.
+          </p>
+          <div id="tests"></div>
+        </section>
+        <section class="panel">
+          <div class="label">Programs</div>
+          <div id="programs" class="buttons"></div>
+        </section>
+      </section>
+
+      <section class="panel">
+        <div class="row">
+          <div class="label">Open alerts</div>
+          <button id="ack-all" class="ghost small" hidden>Acknowledge all</button>
+        </div>
+        <div class="counts">
+          <div><span id="crit" class="crit big">0</span><span class="dim">critical</span></div>
+          <div><span id="warn" class="warn big">0</span><span class="dim">Warning</span></div>
+          <div><span id="info" class="big">0</span><span class="dim">Info</span></div>
+        </div>
+        <ul id="recent"></ul>
+      </section>
+
+      <section class="panel">
+        <div class="label">Server</div>
+        <div id="server" class="dim">–</div>
+        <div class="label spaced">Backups</div>
+        <ul id="backups"></ul>
+      </section>
+
+      <button id="stop" class="danger">EMERGENCY STOP</button>
+      <p id="stop-hint" class="dim small">It can only be released on the PC.</p>
+      <button id="unpair" class="ghost" hidden>Remove pairing from this phone</button>
+      <button id="logout" class="ghost">Sign out</button>
+    </main>
+    <script src="/m/sign.js"></script>
+    <script src="/m/app.js"></script>
+  </body>
+</html>

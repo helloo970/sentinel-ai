@@ -1,0 +1,71 @@
+/* Design tokens: all colours, spacing and timings in one place as CSS variables */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #04060b;
+  --bg-2: #070a12;
+  --panel: rgba(8, 13, 24, 0.86);
+  --panel-solid: #0b1220;
+  --panel-raised: #111a2e;
+  --grid-line: rgba(59, 130, 246, 0.045);
+  --grid-line-strong: rgba(59, 130, 246, 0.09);
+
+  /* Text */
+  --fg: #e6eefc;
+  --fg-dim: #9fb1cc;
+  --fg-faint: #5f7391;
+
+  /* Accent (calm blue) */
+  --accent: #3b82f6;
+  --accent-light: #60a5fa;
+  --accent-pale: #93c5fd;
+  --accent-deep: #1d4ed8;
+  --accent-soft: rgba(59, 130, 246, 0.16);
+  --accent-line: rgba(59, 130, 246, 0.42);
+  --accent-glow: 0 0 6px rgba(59, 130, 246, 0.55), 0 0 18px rgba(59, 130, 246, 0.22);
+  --accent-ink: #020817;
+
+  /* Status – kept separate from the accent */
+  --ok: #34d399;
+  --warn: #facc15;
+  --warn-soft: rgba(250, 204, 21, 0.14);
+  --crit: #ff2d6f;
+  --crit-soft: rgba(255, 45, 111, 0.16);
+  --crit-glow: 0 0 8px rgba(255, 45, 111, 0.7), 0 0 24px rgba(255, 45, 111, 0.3);
+
+  /* Lines */
+  --line: rgba(59, 130, 246, 0.16);
+  --line-strong: rgba(59, 130, 246, 0.5);
+
+  /* Type */
+  --font-display: "Orbitron", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --fs-xs: 12px;
+  --fs-sm: 13.5px;
+  --fs-md: 15.5px;
+  --fs-lg: 19px;
+  --fs-xl: 26px;
+  --fs-xxl: 38px;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  /* Shape */
+  --bevel: 14px;
+  --bevel-sm: 8px;
+  --radius: 3px;
+  --nav-width: 208px;
+  --topbar-height: 60px;
+
+  /* Motion */
+  --t-fast: 120ms;
+  --t-med: 240ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}

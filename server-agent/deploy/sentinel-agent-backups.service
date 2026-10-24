@@ -1,0 +1,12 @@
+[Unit]
+Description=SENTINEL AI: write the backup overview for the agent (timestamps only)
+
+[Service]
+Type=oneshot
+Environment=PYTHONPATH=/opt/sentinel-agent/src
+ExecStart=/usr/bin/python3 -m sentinel_agent.backups --config /etc/sentinel-agent/config.json
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/run/sentinel-agent
+PrivateNetwork=yes
