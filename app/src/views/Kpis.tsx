@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import { narrate } from "../lib/narrate";
+import { narrate, openedByVoice } from "../lib/narrate";
 import { store, useStore } from "../state/store";
 
 interface Tile {
@@ -22,6 +22,7 @@ export function Kpis() {
   useEffect(() => {
     let alive = true;
     const briefing = store.get().viewTab === "briefing";
+    const speak = briefing || openedByVoice("kpis");
     const load = () =>
       api.get<{ tiles: Tile[]; text: string }>("/kpis").then((result) => {
         if (alive) setTiles(result.tiles);
@@ -29,6 +30,7 @@ export function Kpis() {
       });
     load()
       .then(async (result) => {
+        if (!speak) return;
         await narrate(result.text);
         // The briefing ends here: back to Jarvis
         if (alive && briefing) store.set({ view: "dashboard", viewTab: null });
