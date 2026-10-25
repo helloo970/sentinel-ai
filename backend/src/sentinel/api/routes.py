@@ -9,6 +9,7 @@ import time
 from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from sentinel import __version__
@@ -64,6 +65,10 @@ class SetupBody(Body):
     home_city: str | None = Field(default=None, max_length=60)
     google_account: str | None = Field(default=None, max_length=254)
     quiet_hours: str | None = Field(default=None, max_length=11)
+
+
+class CameraMotionBody(Body):
+    enabled: bool
 
 
 class ExternalCallBody(Body):
@@ -149,6 +154,8 @@ def build_router(svc: Services) -> APIRouter:
         for key, title, message in (("tts", "Voice", eleven), ("stt", "Speech recognition", stt)):
             if message:
                 items.append({"key": key, "title": title, "message": message})
+        if svc.camera.error and svc.camera.configured:
+            items.append({"key": "camera", "title": "Camera", "message": svc.camera.error})
         return items
 
     @router.get("/status")
@@ -332,6 +339,7 @@ def build_router(svc: Services) -> APIRouter:
                 "abusech": bool(filescan.abusech_key()),
                 "brain_backup": brain_backup.stored_key() is not None,
                 "server": bool(svc.server.configured),
+                "camera": svc.camera.configured,
             },
             "profile": {
                 "saved": saved is not None,
@@ -444,6 +452,51 @@ def build_router(svc: Services) -> APIRouter:
     @router.get("/markets")
     async def markets(force: bool = False) -> dict[str, Any]:
         return await svc.markets.overview(force=force)
+
+    @router.get("/camera")
+    async def camera() -> dict[str, Any]:
+        return await asyncio.to_thread(svc.camera.status)
+
+    @router.get("/camera/{index}/snapshot")
+    async def camera_snapshot(index: int) -> Response:
+        from sentinel.camera.onvif import CameraError
+
+        if not 1 <= index <= 64:
+            raise HTTPException(404, "Unknown camera")
+        try:
+            image = await asyncio.to_thread(svc.camera.snapshot, index)
+        except CameraError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        # Live images are never cached or stored
+        return Response(
+            content=image, media_type="image/jpeg", headers={"Cache-Control": "no-store"}
+        )
+
+    @router.get("/camera/{index}/video")
+    async def camera_video(index: int, full: bool = False) -> StreamingResponse:
+        from sentinel.camera import video
+        from sentinel.camera.onvif import CameraError
+
+        if not 1 <= index <= 64:
+            raise HTTPException(404, "Unknown camera")
+        try:
+            args = await asyncio.to_thread(svc.camera.video_args, index, full)
+        except CameraError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        if video.busy():
+            raise HTTPException(503, "Too many live videos open at once")
+        # ffmpeg starts when the body is read and stops when the viewer leaves.
+        # Raw MJPEG frames, never cached or stored.
+        return StreamingResponse(
+            video.mjpeg_stream(args),
+            media_type="video/x-motion-jpeg",
+            headers={"Cache-Control": "no-store"},
+        )
+
+    @router.put("/camera/motion")
+    def camera_motion(body: CameraMotionBody) -> dict[str, Any]:
+        svc.camera.set_motion(body.enabled)
+        return {"motion": svc.camera.motion_enabled}
 
     @router.get("/markets/summary")
     async def markets_summary() -> dict[str, str]:

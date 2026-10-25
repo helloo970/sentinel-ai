@@ -1841,3 +1841,51 @@ pre.code {
     opacity: 0;
   }
 }
+
+/* Live cameras (still images, refreshed) */
+.cam-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--sp-3);
+}
+.cam-tile {
+  position: relative;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: rgba(59, 130, 246, 0.035);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  cursor: pointer;
+}
+.cam-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cam-focus {
+  aspect-ratio: auto;
+  max-height: 75vh;
+}
+.cam-focus img {
+  object-fit: contain;
+  max-height: 75vh;
+}
+.cam-name {
+  position: absolute;
+  left: var(--sp-2);
+  bottom: var(--sp-2);
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--fg);
+}
+.cam-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--fg-faint);
+}

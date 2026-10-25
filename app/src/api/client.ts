@@ -121,3 +121,28 @@ export async function waitForBackend(timeoutMs = 30000): Promise<boolean> {
   }
   return false;
 }
+
+/** Binary GET (e.g. a live camera image). */
+export async function getBlob(path: string, signal?: AbortSignal): Promise<Blob> {
+  if (!config) throw new ApiError(0, "Backend not connected");
+  const response = await fetch(`${config.baseUrl}${path}`, { headers: headers(), signal });
+  if (!response.ok) throw new ApiError(response.status, response.statusText);
+  return response.blob();
+}
+
+/** Streaming GET: hands the raw bytes to `onChunk` until aborted (e.g. live camera video). */
+export async function readStream(
+  path: string,
+  onChunk: (chunk: Uint8Array) => void,
+  signal: AbortSignal,
+): Promise<void> {
+  if (!config) throw new ApiError(0, "Backend not connected");
+  const response = await fetch(`${config.baseUrl}${path}`, { headers: headers(), signal });
+  if (!response.ok || !response.body) throw new ApiError(response.status, response.statusText);
+  const reader = response.body.getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return;
+    onChunk(value);
+  }
+}

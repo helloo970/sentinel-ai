@@ -685,6 +685,64 @@ def abusech(args: list[str]) -> int:
     return 0
 
 
+def camera(args: list[str]) -> int:
+    """Connect an ONVIF camera or recorder on the home network (login stored hidden)."""
+    import getpass
+
+    from sentinel.camera import onvif, service
+
+    command = args[0] if args else "status"
+    if command == "logout":
+        service.delete_login()
+        print("Camera login removed.")
+        return 0
+    if command == "status":
+        login = service.load_login()
+        if login is None:
+            print("no camera set up")
+            return 0
+        try:
+            client = onvif.OnvifClient(login["url"], login["user"], login["password"])
+            names = [c.name for c in client.channels()]
+        except onvif.CameraError as exc:
+            print(f"Camera set up, but: {exc}", file=sys.stderr)
+            return 1
+        print(f"{len(names)} camera(s): {', '.join(names)}")
+        return 0
+    if command != "login":
+        print("Usage: sentinel camera [login|logout|status]", file=sys.stderr)
+        return 2
+    address = input("IP address of the camera or recorder (e.g. 192.168.1.20): ").strip()
+    if address.startswith(("http://", "https://")):
+        url: str | None = address
+    else:
+        try:
+            url = onvif.discover(address)
+        except (onvif.CameraError, OSError) as exc:
+            print(f"Not possible: {exc}", file=sys.stderr)
+            return 1
+        if url is None:
+            print(
+                "No ONVIF answer from this address. Is ONVIF enabled on the device?",
+                file=sys.stderr,
+            )
+            return 1
+    if not onvif.private_url(url):
+        print("Only private IP addresses on the home network are allowed.", file=sys.stderr)
+        return 1
+    user = input("Username (often admin): ").strip()
+    password = getpass.getpass("Password (input hidden): ")
+    try:
+        channels = onvif.OnvifClient(url, user, password).channels()
+    except onvif.CameraError as exc:
+        print(f"Login failed: {exc}", file=sys.stderr)
+        return 1
+    service.save_login(url, user, password)
+    print(f"Saved. {len(channels)} camera(s) found: {', '.join(c.name for c in channels)}")
+    print('Open them in SENTINEL with "show me the camera".')
+    return 0
+
+
 def run(argv: list[str]) -> int | None:
     """Return None if no CLI command is meant (then the server starts)."""
     if argv and argv[0] == "plugins":
@@ -701,6 +759,8 @@ def run(argv: list[str]) -> int | None:
         return elevenlabs(argv[1:])
     if argv and argv[0] == "web":
         return web_cmd(argv[1:])
+    if argv and argv[0] == "camera":
+        return camera(argv[1:])
     if argv and argv[0] == "abusech":
         return abusech(argv[1:])
     if argv and argv[0] == "db":
@@ -727,6 +787,7 @@ def run(argv: list[str]) -> int | None:
             "sentinel hermes setup|off|status\n"
             "sentinel db check|repair|restore\n"
             "sentinel abusech login|logout|status\n"
+            "sentinel camera login|logout|status\n"
             "sentinel web status|google <email>|google off\n"
             "sentinel mcp        MCP server for Hermes (started by Hermes itself)"
         )

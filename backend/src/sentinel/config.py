@@ -165,6 +165,8 @@ class Settings(BaseSettings):
     # Weather, calendar, reports
     weather_enabled: bool = True
     home_city: str | None = None
+    # ffmpeg for live camera video; empty = PATH or winget install
+    ffmpeg_path: Path | None = None
     home_lat: float | None = Field(default=None, ge=-90, le=90)
     home_lon: float | None = Field(default=None, ge=-180, le=180)
     evening_report_time: str = Field(default="21:00", pattern=r"^([01]\d|2[0-3]):[0-5]\d$")

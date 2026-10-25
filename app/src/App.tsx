@@ -27,6 +27,7 @@ import { Shop } from "./views/Shop";
 import { BrainStage } from "./views/BrainStage";
 import { Kpis } from "./views/Kpis";
 import { Markets } from "./views/Markets";
+import { Camera } from "./views/Camera";
 import { World } from "./views/World";
 
 // The start screen is Jarvis. Jarvis opens every other section full screen by voice
@@ -38,6 +39,7 @@ const VIEWS = {
   world: World,
   markets: Markets,
   kpis: Kpis,
+  camera: Camera,
   overview: Dashboard,
   security: Security,
   network: Network,
@@ -56,6 +58,7 @@ const MAIN: ViewName[] = [
   "world",
   "markets",
   "kpis",
+  "camera",
   "brain",
   "security",
   "network",
@@ -67,6 +70,7 @@ const PALETTE: ViewName[] = [
   "world",
   "markets",
   "kpis",
+  "camera",
   "security",
   "network",
   "automation",

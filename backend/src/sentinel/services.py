@@ -58,6 +58,7 @@ class Services:
     eleven: Any = None
     brain: Any = None
     markets: Any = None
+    camera: Any = None
 
 
 def build_services(config: Settings, *, llm: Any = None) -> Services:
@@ -70,6 +71,7 @@ def build_services(config: Settings, *, llm: Any = None) -> Services:
     from sentinel.automation.routines import RoutineCatalog
     from sentinel.automation.scheduler import AutomationScheduler
     from sentinel.brain.service import BrainService
+    from sentinel.camera.service import CameraService
     from sentinel.chat.service import ChatService
     from sentinel.llm.costs import CostTracker
     from sentinel.llm.factory import create_provider
@@ -121,6 +123,7 @@ def build_services(config: Settings, *, llm: Any = None) -> Services:
         on_event=bus.publish,
     )
     svc.notifier = Notifier(svc)
+    svc.camera = CameraService(svc)
     svc.plugins = PluginManager(svc)
     svc.programs = ProgramCatalog(config.config_dir)
     svc.routines = RoutineCatalog(config.config_dir, plugins=svc.plugins)
