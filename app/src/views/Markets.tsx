@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import { narrate } from "../lib/narrate";
+import { narrate, openedByVoice } from "../lib/narrate";
 import { formatPrice, sparkPoints } from "../lib/sparkline";
 import { store, useStore } from "../state/store";
 
@@ -60,11 +60,14 @@ export function Markets() {
   useEffect(() => {
     let alive = true;
     const briefing = store.get().viewTab === "briefing";
+    // Only talk when Jarvis opened the view, not on a manual click
+    const speak = briefing || openedByVoice("markets");
     api
       .get<MarketData>("/markets")
       .then(async (result) => {
         if (!alive) return;
         setData(result);
+        if (!speak) return;
         const summary = await api.get<{ text: string }>("/markets/summary");
         if (!alive) return;
         await narrate(summary.text);

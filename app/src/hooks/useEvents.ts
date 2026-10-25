@@ -126,6 +126,7 @@ export function handleEvent(event: BackendEvent): void {
       store.set({
         view: str(data.view),
         viewTab: data.tab ? str(data.tab) : null,
+        voiceView: { view: str(data.view), at: Date.now() },
         hacker: { id: Date.now(), title, lines: hackerLines(title) },
       });
       break;

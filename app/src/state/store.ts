@@ -25,6 +25,8 @@ export interface AppState {
   pinRequest: { title: string } | null;
   view: string;
   viewTab: string | null;
+  /** Last view Jarvis opened by voice, to tell it apart from manual navigation */
+  voiceView: { view: string; at: number } | null;
   hacker: { id: number; title: string; lines: string[] } | null;
   tourRequest: number;
   tourMorning: boolean;
@@ -71,6 +73,7 @@ export const store = createStore<AppState>({
   pinRequest: null,
   view: "dashboard",
   viewTab: null,
+  voiceView: null,
   hacker: null,
   tourRequest: 0,
   tourMorning: false,

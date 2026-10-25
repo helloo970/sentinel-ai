@@ -11,3 +11,9 @@ export async function narrate(text: string): Promise<void> {
   }
   await speakAsync(text);
 }
+
+/** True if Jarvis just opened this view by voice (a manual click stays silent). */
+export function openedByVoice(view: string, withinMs = 5000): boolean {
+  const opened = store.get().voiceView;
+  return opened?.view === view && Date.now() - opened.at < withinMs;
+}
