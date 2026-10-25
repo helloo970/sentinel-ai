@@ -25,7 +25,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://tv-trthaber.medya.trt.com.tr https://tagesschau.akamaized.net; media-src 'self' blob: https://tv-trthaber.medya.trt.com.tr https://tagesschau.akamaized.net; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* https://tv-trthaber.medya.trt.com.tr https://tagesschau.akamaized.net; media-src 'self' blob: https://tv-trthaber.medya.trt.com.tr https://tagesschau.akamaized.net; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
       "freezePrototype": true
     }
   },
