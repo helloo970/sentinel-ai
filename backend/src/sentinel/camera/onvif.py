@@ -172,7 +172,9 @@ class OnvifClient:
             url = parsed._replace(netloc=f"{parsed.hostname}:{device.port}").geturl()
         return url
 
-    def call(self, url: str, body: str, *, auth: bool = True) -> ET.Element:
+    def call(
+        self, url: str, body: str, *, auth: bool = True, timeout: float | None = None
+    ) -> ET.Element:
         header = f"<s:Header>{security_header(self.user, self.password)}</s:Header>" if auth else ""
         envelope = (
             '<?xml version="1.0" encoding="UTF-8"?>'
@@ -185,6 +187,7 @@ class OnvifClient:
                 url,
                 content=envelope.encode(),
                 headers={"Content-Type": "application/soap+xml; charset=utf-8"},
+                **({"timeout": timeout} if timeout else {}),
             )
         except httpx.HTTPError as exc:
             raise CameraError("Camera not reachable") from exc
@@ -307,11 +310,13 @@ class OnvifClient:
             raise CameraError("Camera did not create a motion subscription")
         return self._same_device(address)
 
-    def pull_motion(self, address: str, timeout_s: int = 10) -> list[MotionEvent]:
+    def pull_motion(self, address: str, timeout_s: int = 5) -> list[MotionEvent]:
+        # The camera holds the request open until events arrive or the timeout ends
         root = self.call(
             address,
             f"<tev:PullMessages><tev:Timeout>PT{timeout_s}S</tev:Timeout>"
             "<tev:MessageLimit>20</tev:MessageLimit></tev:PullMessages>",
+            timeout=timeout_s + 10,
         )
         return parse_motion(root)
 

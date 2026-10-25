@@ -71,20 +71,42 @@ function LiveVideo({ index, full }: { index: number; full: boolean }) {
       url = next;
       setSrc(next);
     };
-    readStream(
-      `/camera/${index}/video?full=${full}`,
-      (chunk) => {
-        const frames = split.push(chunk);
-        if (frames.length === 0) return;
-        pending = frames[frames.length - 1] ?? null;
-        if (!frame) frame = requestAnimationFrame(show);
-      },
-      controller.signal,
-    ).catch(() => {
-      if (!controller.signal.aborted) setFailed(true);
-    });
-    return () => {
+    let frames = 0;
+    let retry = 0;
+    const start = () => {
+      const before = frames;
+      readStream(
+        `/camera/${index}/video?full=${full}`,
+        (chunk) => {
+          const found = split.push(chunk);
+          if (found.length === 0) return;
+          frames += found.length;
+          pending = found[found.length - 1] ?? null;
+          if (!frame) frame = requestAnimationFrame(show);
+        },
+        controller.signal,
+      )
+        // The stream ended: reconnect if it was running, otherwise fall back to images
+        .then(() => {
+          if (controller.signal.aborted) return;
+          if (frames > before) retry = window.setTimeout(start, 2000);
+          else setFailed(true);
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setFailed(true);
+        });
+    };
+    start();
+    // Recorders allow only a few streams at once: no frame after 8 s -> still images
+    const watchdog = window.setTimeout(() => {
+      if (frames > 0) return;
       controller.abort();
+      setFailed(true);
+    }, 8000);
+    return () => {
+      window.clearTimeout(watchdog);
+      controller.abort();
+      window.clearTimeout(retry);
       cancelAnimationFrame(frame);
       if (url) URL.revokeObjectURL(url);
     };

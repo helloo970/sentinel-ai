@@ -6,7 +6,6 @@ import asyncio
 import logging
 import re
 import time
-from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Response
@@ -482,22 +481,16 @@ def build_router(svc: Services) -> APIRouter:
             raise HTTPException(404, "Unknown camera")
         try:
             args = await asyncio.to_thread(svc.camera.video_args, index, full)
-            stream = video.mjpeg_stream(args)
-            first = await anext(stream)
-        except (CameraError, StopAsyncIteration) as exc:
-            raise HTTPException(503, str(exc) or "No video from the camera") from exc
-
-        async def body() -> AsyncIterator[bytes]:
-            try:
-                yield first
-                async for chunk in stream:
-                    yield chunk
-            finally:
-                await stream.aclose()  # stops ffmpeg when the viewer leaves
-
-        # Raw MJPEG frames, never cached or stored
+        except CameraError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        if video.busy():
+            raise HTTPException(503, "Too many live videos open at once")
+        # ffmpeg starts when the body is read and stops when the viewer leaves.
+        # Raw MJPEG frames, never cached or stored.
         return StreamingResponse(
-            body(), media_type="video/x-motion-jpeg", headers={"Cache-Control": "no-store"}
+            video.mjpeg_stream(args),
+            media_type="video/x-motion-jpeg",
+            headers={"Cache-Control": "no-store"},
         )
 
     @router.put("/camera/motion")

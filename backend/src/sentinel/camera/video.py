@@ -77,7 +77,7 @@ def ffmpeg_args(ffmpeg: Path, url: str, fps: int, width: int) -> list[str]:
 async def mjpeg_stream(args: list[str]) -> AsyncIterator[bytes]:
     """Yield raw MJPEG bytes until the viewer disconnects; ffmpeg is always stopped."""
     if not _active.acquire(blocking=False):
-        raise CameraError("Too many live videos open at once")
+        return  # the route checked before; an empty answer lets the app fall back
     flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
     try:
         proc = subprocess.Popen(  # noqa: S603 - fixed binary and argument list, no shell
@@ -98,6 +98,15 @@ async def mjpeg_stream(args: list[str]) -> AsyncIterator[bytes]:
                 break
             yield chunk
     finally:
+        # No await here: a cancelled stream must still free its slot and stop ffmpeg
         proc.kill()
-        await asyncio.to_thread(proc.wait)
         _active.release()
+        threading.Thread(target=proc.wait, daemon=True).start()
+
+
+def busy() -> bool:
+    """True if no further live video may start right now."""
+    if not _active.acquire(blocking=False):
+        return True
+    _active.release()
+    return False
