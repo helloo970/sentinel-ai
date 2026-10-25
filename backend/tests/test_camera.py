@@ -210,3 +210,51 @@ def test_voice_opens_camera_view() -> None:
 
     assert quick.match("Show me the camera").params == {"view": "camera"}
     assert quick.match("Jarvis, open the security cameras").params == {"view": "camera"}
+
+
+def test_device_urls_without_port_keep_the_device_port() -> None:
+    client = OnvifClient(DEVICE, "admin", "secret", httpx.Client())
+    fixed = client._same_device("http://192.168.0.20/onvif/Events/PullSub_1")
+    assert fixed == "http://192.168.0.20:1000/onvif/Events/PullSub_1"
+
+
+def test_generic_profile_names_become_camera_numbers() -> None:
+    assert onvif._GENERIC_NAME.fullmatch("ProfileName001")
+    assert not onvif._GENERIC_NAME.fullmatch("Driveway")
+
+
+def test_video_url_only_private_and_login_encoded() -> None:
+    from sentinel.camera import video
+
+    url = video.with_login("rtsp://192.168.0.20:1024/Streaming/channels/102", "ad min", "p@ss:/")
+    assert url == "rtsp://ad%20min:p%40ss%3A%2F@192.168.0.20:1024/Streaming/channels/102"
+    with pytest.raises(CameraError):
+        video.with_login("rtsp://203.0.113.5/live", "admin", "secret")
+    assert onvif.find_rtsp_port("203.0.113.5", [554]) is None
+
+
+def test_ffmpeg_gets_a_fixed_argument_list(tmp_path) -> None:
+    from sentinel.camera import video
+
+    exe = tmp_path / "ffmpeg.exe"
+    exe.write_bytes(b"")
+    args = video.ffmpeg_args(exe, "rtsp://u:p@192.168.0.20:1024/x", 8, 640)
+    assert args[0] == str(exe) and args[-1] == "pipe:1" and "-i" in args
+    assert video.find_ffmpeg(exe) == exe
+
+
+def test_video_without_ffmpeg_is_explained(svc: Services, monkeypatch) -> None:
+    from fastapi.testclient import TestClient
+
+    from sentinel.api.app import create_app
+    from sentinel.camera import video
+
+    monkeypatch.setattr(video, "find_ffmpeg", lambda configured=None: None)
+    camera_svc(svc)
+    api = TestClient(
+        create_app(svc, token="t-1", start_background=False), base_url="http://127.0.0.1:8765"
+    )
+    h = {"Authorization": "Bearer t-1"}
+    r = api.get("/camera/1/video", headers=h)
+    assert r.status_code == 503 and "winget install Gyan.FFmpeg" in r.json()["detail"]
+    assert api.get("/camera", headers=h).json()["video"] is False

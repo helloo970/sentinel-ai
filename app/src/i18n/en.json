@@ -479,7 +479,8 @@
     "notSetUp": "No camera set up yet. In a terminal:",
     "motionOn": "Motion alerts: on",
     "motionOff": "Motion alerts: off",
-    "lastMotion": "Last motion: {{name}}, {{ago}}"
+    "lastMotion": "Last motion: {{name}}, {{ago}}",
+    "noVideo": "Still images only – for live video install ffmpeg:"
   },
   "setup": {
     "title": "Setup",

@@ -64,6 +64,12 @@ def delete_login() -> None:
         _keyring().delete_password(*KEYRING)
 
 
+def video_ready(svc: Services) -> bool:
+    from sentinel.camera.video import find_ffmpeg
+
+    return find_ffmpeg(svc.config.ffmpeg_path) is not None
+
+
 class CameraService:
     def __init__(self, svc: Services, client_factory: Any = OnvifClient) -> None:
         self.svc = svc
@@ -133,6 +139,22 @@ class CameraService:
         self._cache[index] = (time.time(), image)
         return image
 
+    def video_args(self, index: int, full: bool) -> list[str]:
+        """ffmpeg command for one camera (main stream when enlarged, sub stream in the grid)."""
+        from sentinel.camera import video
+
+        ffmpeg = video.find_ffmpeg(self.svc.config.ffmpeg_path)
+        if ffmpeg is None:
+            raise CameraError("ffmpeg missing – in a terminal: winget install Gyan.FFmpeg")
+        channel = next((c for c in self.channels() if c.index == index), None)
+        if channel is None or self._login is None:
+            raise CameraError("Unknown camera")
+        client = self._get_client()
+        uri = client.stream_uri(channel.profile if full else channel.sub_profile)
+        url = video.with_login(uri, self._login["user"], self._login["password"])
+        size = video.FULL if full else video.GRID
+        return video.ffmpeg_args(ffmpeg, url, size["fps"], size["width"])
+
     def status(self) -> dict[str, Any]:
         if not self.configured:
             return {"configured": False, "channels": [], "error": None, "motion": False}
@@ -146,6 +168,7 @@ class CameraService:
             "error": self.error,
             "motion": self.motion_enabled,
             "last_motion": self.last_motion,
+            "video": video_ready(self.svc),
         }
 
     # ------------------------------------------------------------- motion

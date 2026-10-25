@@ -6,9 +6,11 @@ import asyncio
 import logging
 import re
 import time
+from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any, Literal
 
 from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from sentinel import __version__
@@ -469,6 +471,33 @@ def build_router(svc: Services) -> APIRouter:
         # Live images are never cached or stored
         return Response(
             content=image, media_type="image/jpeg", headers={"Cache-Control": "no-store"}
+        )
+
+    @router.get("/camera/{index}/video")
+    async def camera_video(index: int, full: bool = False) -> StreamingResponse:
+        from sentinel.camera import video
+        from sentinel.camera.onvif import CameraError
+
+        if not 1 <= index <= 64:
+            raise HTTPException(404, "Unknown camera")
+        try:
+            args = await asyncio.to_thread(svc.camera.video_args, index, full)
+            stream = video.mjpeg_stream(args)
+            first = await anext(stream)
+        except (CameraError, StopAsyncIteration) as exc:
+            raise HTTPException(503, str(exc) or "No video from the camera") from exc
+
+        async def body() -> AsyncIterator[bytes]:
+            try:
+                yield first
+                async for chunk in stream:
+                    yield chunk
+            finally:
+                await stream.aclose()  # stops ffmpeg when the viewer leaves
+
+        # Raw MJPEG frames, never cached or stored
+        return StreamingResponse(
+            body(), media_type="video/x-motion-jpeg", headers={"Cache-Control": "no-store"}
         )
 
     @router.put("/camera/motion")

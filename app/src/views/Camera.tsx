@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api, getBlob } from "../api/client";
+import { api, getBlob, readStream } from "../api/client";
 import { formatAgo } from "../lib/format";
+import { MjpegSplitter } from "../lib/mjpeg";
 
 interface CameraState {
   configured: boolean;
   channels: { index: number; name: string }[];
   error: string | null;
   motion: boolean;
+  video?: boolean;
   last_motion?: { channel: number | null; name: string; at: number } | null;
 }
 
@@ -46,6 +48,50 @@ function LiveImage({ index, every }: { index: number; every: number }) {
   }, [index, every]);
 
   if (failed && !src) return <div className="cam-empty">●</div>;
+  return src ? <img src={src} alt="" /> : <div className="cam-empty">…</div>;
+}
+
+/** Live video: MJPEG from the backend (ffmpeg), shows the newest frame only. */
+function LiveVideo({ index, full }: { index: number; full: boolean }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const split = new MjpegSplitter();
+    let url: string | null = null;
+    let pending: Uint8Array | null = null;
+    let frame = 0;
+    const show = () => {
+      frame = 0;
+      if (!pending) return;
+      const next = URL.createObjectURL(new Blob([pending as BlobPart], { type: "image/jpeg" }));
+      pending = null;
+      if (url) URL.revokeObjectURL(url);
+      url = next;
+      setSrc(next);
+    };
+    readStream(
+      `/camera/${index}/video?full=${full}`,
+      (chunk) => {
+        const frames = split.push(chunk);
+        if (frames.length === 0) return;
+        pending = frames[frames.length - 1] ?? null;
+        if (!frame) frame = requestAnimationFrame(show);
+      },
+      controller.signal,
+    ).catch(() => {
+      if (!controller.signal.aborted) setFailed(true);
+    });
+    return () => {
+      controller.abort();
+      cancelAnimationFrame(frame);
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [index, full]);
+
+  // Without video (no ffmpeg, stream off) the still images still work
+  if (failed) return <LiveImage index={index} every={full ? FOCUS_EVERY_MS : GRID_EVERY_MS} />;
   return src ? <img src={src} alt="" /> : <div className="cam-empty">…</div>;
 }
 
@@ -104,18 +150,23 @@ export function Camera() {
             </span>
           )}
           {state.error && <span className="warn">{state.error}</span>}
+          {state.video === false && (
+            <span className="faint">
+              {t("camera.noVideo")} <span className="mono">winget install Gyan.FFmpeg</span>
+            </span>
+          )}
         </div>
       )}
       {focused ? (
         <button className="cam-tile cam-focus" onClick={() => setFocus(null)}>
-          <LiveImage index={focused.index} every={FOCUS_EVERY_MS} />
+          <LiveVideo index={focused.index} full />
           <span className="cam-name">{focused.name}</span>
         </button>
       ) : (
         <div className="cam-grid">
           {state?.channels.map((c) => (
             <button key={c.index} className="cam-tile" onClick={() => setFocus(c.index)}>
-              <LiveImage index={c.index} every={GRID_EVERY_MS} />
+              <LiveVideo index={c.index} full={false} />
               <span className="cam-name">{c.name}</span>
             </button>
           ))}
