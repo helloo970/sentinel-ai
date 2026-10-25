@@ -85,3 +85,6 @@ def _isolated_keyring(monkeypatch) -> None:
     from sentinel.pcsec import filescan
 
     monkeypatch.setattr(filescan, "_keyring", lambda: fake)
+    from sentinel.camera import service as camera_service
+
+    monkeypatch.setattr(camera_service, "_keyring", lambda: fake)

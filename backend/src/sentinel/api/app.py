@@ -40,6 +40,7 @@ def create_app(
             svc.reports.start()
             svc.voice.start()
             svc.brain.start()
+            svc.camera.start()
         try:
             yield
         finally:
@@ -52,6 +53,7 @@ def create_app(
                 await svc.reports.stop()
                 svc.voice.stop()
                 await svc.brain.stop()
+                await svc.camera.stop()
             svc.db.close()
 
     app = FastAPI(

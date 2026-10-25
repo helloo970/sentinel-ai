@@ -15,7 +15,8 @@
     "overview": "Overview",
     "brain": "Brain",
     "markets": "Markets",
-    "kpis": "Key figures"
+    "kpis": "Key figures",
+    "camera": "Camera"
   },
   "brand": {
     "tagline": "Defensive intelligence"
@@ -472,7 +473,13 @@
   },
   "camera": {
     "on": "Camera on",
-    "error": "Camera unavailable"
+    "error": "Camera unavailable",
+    "kicker": "Live · home network",
+    "title": "Cameras",
+    "notSetUp": "No camera set up yet. In a terminal:",
+    "motionOn": "Motion alerts: on",
+    "motionOff": "Motion alerts: off",
+    "lastMotion": "Last motion: {{name}}, {{ago}}"
   },
   "setup": {
     "title": "Setup",
@@ -502,7 +509,8 @@
       "gmail": "Gmail",
       "abusech": "Malware list (abuse.ch)",
       "brain_backup": "Brain backup",
-      "server": "Ubuntu server"
+      "server": "Ubuntu server",
+      "camera": "Camera / recorder"
     },
     "invalid": "Invalid – e.g. 23:00-07:00 and name@gmail.com"
   }

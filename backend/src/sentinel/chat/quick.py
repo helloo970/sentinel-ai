@@ -84,6 +84,11 @@ _VIEWS: dict[str, tuple[str, str | None]] = {
     "statistics": ("kpis", None),
     "stats": ("kpis", None),
     "world map": ("world", None),
+    "camera": ("camera", None),
+    "cameras": ("camera", None),
+    "security camera": ("camera", None),
+    "security cameras": ("camera", None),
+    "cctv": ("camera", None),
     "news": ("world", None),
 }
 _OPEN = re.compile(

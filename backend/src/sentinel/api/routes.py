@@ -66,6 +66,10 @@ class SetupBody(Body):
     quiet_hours: str | None = Field(default=None, max_length=11)
 
 
+class CameraMotionBody(Body):
+    enabled: bool
+
+
 class ExternalCallBody(Body):
     action: str = Field(min_length=2, max_length=60, pattern=r"^[a-z][a-z0-9_]{1,59}$")
     params: dict[str, Any] = Field(default_factory=dict)
@@ -149,6 +153,8 @@ def build_router(svc: Services) -> APIRouter:
         for key, title, message in (("tts", "Voice", eleven), ("stt", "Speech recognition", stt)):
             if message:
                 items.append({"key": key, "title": title, "message": message})
+        if svc.camera.error and svc.camera.configured:
+            items.append({"key": "camera", "title": "Camera", "message": svc.camera.error})
         return items
 
     @router.get("/status")
@@ -332,6 +338,7 @@ def build_router(svc: Services) -> APIRouter:
                 "abusech": bool(filescan.abusech_key()),
                 "brain_backup": brain_backup.stored_key() is not None,
                 "server": bool(svc.server.configured),
+                "camera": svc.camera.configured,
             },
             "profile": {
                 "saved": saved is not None,
@@ -444,6 +451,30 @@ def build_router(svc: Services) -> APIRouter:
     @router.get("/markets")
     async def markets(force: bool = False) -> dict[str, Any]:
         return await svc.markets.overview(force=force)
+
+    @router.get("/camera")
+    async def camera() -> dict[str, Any]:
+        return await asyncio.to_thread(svc.camera.status)
+
+    @router.get("/camera/{index}/snapshot")
+    async def camera_snapshot(index: int) -> Response:
+        from sentinel.camera.onvif import CameraError
+
+        if not 1 <= index <= 64:
+            raise HTTPException(404, "Unknown camera")
+        try:
+            image = await asyncio.to_thread(svc.camera.snapshot, index)
+        except CameraError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        # Live images are never cached or stored
+        return Response(
+            content=image, media_type="image/jpeg", headers={"Cache-Control": "no-store"}
+        )
+
+    @router.put("/camera/motion")
+    def camera_motion(body: CameraMotionBody) -> dict[str, Any]:
+        svc.camera.set_motion(body.enabled)
+        return {"motion": svc.camera.motion_enabled}
 
     @router.get("/markets/summary")
     async def markets_summary() -> dict[str, str]:

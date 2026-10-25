@@ -23,6 +23,7 @@ const LOGIN_COMMANDS: Record<string, string> = {
   gmail: "sentinel gmail login",
   abusech: "sentinel abusech login",
   brain_backup: "sentinel brain password",
+  camera: "sentinel camera login",
 };
 
 /** Warnings (what isn't working right now) and setup (home city, Google account, quiet hours, profile). */
